@@ -6,6 +6,8 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
+import { takeEvery, put } from 'redux-saga/effects';
+import axios from 'axios';
 
 function* myGenerator() {
     try {
@@ -83,11 +85,36 @@ const elementList = (state = [], action) => {
     }
 };
 
+// function* firstSaga(action) {
+//     console.log('firstSaga:', action)
+// }  
+
+function* fetchElements() {
+    try {
+        const elementResponse = yield axios.get('/api/element');
+        yield  put({type: 'SET_ELEMENTS', payload: elementResponse.data});
+    }
+    catch (error) {
+        console.log('Error in fetchElements;', error);
+    }
+};
+
+function* postElement(action) {
+    try {
+        yield axios.post('/api/element', action.payload);
+        yield  put({type: 'FETCH_ELEMENTS'});
+    }
+    catch (error) {
+        console.log('Error in postElements;', error);
+    }
+};
+
 // this is the saga that will watch for actions
 function* watcherSaga() {
-
-}
-
+    // yield takeEvery('SET_ELEMENTS', firstSaga);
+    yield takeEvery('FETCH_ELEMENTS', fetchElements);
+    yield takeEvery('ADD_ELEMENT', postElement);
+};
 
 const sagaMiddleware = createSagaMiddleware();
 
